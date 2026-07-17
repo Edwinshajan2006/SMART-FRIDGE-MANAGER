@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import Sidebar from "./components/Sidebar";
 import Navbar from "./components/Navbar";
@@ -9,6 +9,7 @@ import NotificationPage from "./components/NotificationPage";
 import SettingsPage from "./components/SettingsPage";
 import ProfilePage from "./components/ProfilePage";
 import { createFridgePayload, downloadJsonFile, uploadToFirebase } from "./services/fridgeData";
+import { fetchItemsFromSupabase, saveItemsToSupabase } from "./services/supabase";
 
 function App() {
   const [items, setItems] = useState([]);
@@ -21,7 +22,20 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const [fridgeName, setFridgeName] = useState("My Smart Fridge");
 
-  const addItem = (event) => {
+  useEffect(() => {
+    const loadItems = async () => {
+      try {
+        const backendItems = await fetchItemsFromSupabase();
+        setItems(backendItems);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    loadItems();
+  }, []);
+
+  const addItem = async (event) => {
     event.preventDefault();
     if (!product.trim() || !expiryDate) return;
 
@@ -33,10 +47,17 @@ function App() {
       addedAt: new Date().toISOString(),
     };
 
-    setItems((prevItems) => [newItem, ...prevItems]);
+    const updatedItems = [newItem, ...items];
+    setItems(updatedItems);
     setProduct("");
     setExpiryDate("");
     setQuantity(1);
+
+    try {
+      await saveItemsToSupabase(updatedItems);
+    } catch (error) {
+      setUploadMessage(error.message);
+    }
   };
 
   const exportToJson = () => {
@@ -68,9 +89,13 @@ function App() {
     return { totalItems, soonExpiring };
   }, [items]);
 
-  const clearFridge = () => {
-    setItems([]);
-    setUploadMessage("Fridge cleared successfully.");
+  const clearFridge = async () => {
+    try {
+      setItems([]);
+      setUploadMessage("Fridge cleared successfully.");
+    } catch (error) {
+      setUploadMessage(error.message);
+    }
   };
 
   const notifications = useMemo(() => {
