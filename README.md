@@ -2,6 +2,12 @@
 
 <div align="center">
 
+<img src="./profile-banner.svg" width="100%" alt="SMART FRIDGE MANAGER project banner" />
+
+</div>
+
+<div align="center">
+
 ### Track stored food and keep expiry information organized
 
 [![React](https://img.shields.io/badge/Frontend-React-111827?style=flat-square&logo=react)](https://react.dev/)
